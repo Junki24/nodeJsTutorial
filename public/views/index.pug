@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+  a(href="/users/reg")
+    button 회원가입
+  a(href="/users/login")
+    button 로그인

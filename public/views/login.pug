@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  h1= 로그인
+  form(action="/users/login" method="post") 
+    h3 아이디
+    input(type="text" name="userId")
+    h3 비밀번호
+    input(type="password" name="userPassword")
+    button(type="submit") 로그인

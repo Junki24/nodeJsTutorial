@@ -1,0 +1,122 @@
+extends layout
+block script 
+    script.
+        var date = new Date();
+        var user_name;
+        var socket = io()
+
+        function getDate(){
+            return ("[" + date.getFullYear() + "/" + (date.getMonth()+1) + "/" + date.getDate() + ":" + date.getHours() + ":" + date.getMinutes()
+             + "] " )
+        }
+
+        function init(){
+            getInfo()
+            $("#unsubBtn").attr("disabled",true)
+            $("#msg").attr("disabled",true)
+            $("#pubBtn").attr("disabled",true)
+
+            socket.on("receivePub", function(data) {
+                console.log(data)
+                receiveMsg(data);
+            })
+        }
+
+        function getInfo(){
+            $.ajax({
+                url:"/users/me",
+                type:"GET",
+                success: function(data){
+                    $("#userId").html($("#userId").html() + " " + data.user_id)
+                    $("#userPassword").html($("#userPassword").html() + " " + data.user_password)
+                    $("#userName").html($("#userName").html() + " " + data.user_name)
+                    user_name = data.user_name
+                }
+            })
+        }
+
+        function popSubChannel(flag){
+            var popTemp = $("#channel").val()
+            //true => sub ,false => unsub
+            if(flag==0){
+                subChannel(popTemp)
+                $("#subBtn").attr("disabled",true)
+                $("#unsubBtn").removeAttr("disabled")
+                $("#channel").attr("readonly",true)
+                $("#channelName").html( $("#channelName").html() + " : " + popTemp)
+                $("#msg").removeAttr("disabled")
+                $("#pubBtn").removeAttr("disabled")
+            }else{
+                unsubChannel(popTemp)
+                $("#channel").val('')
+                $("#channel").attr("readonly",false)
+                $("#channelName").html('채널명')
+                $("#unsubBtn").attr("disabled",true)
+                $("#subBtn").removeAttr("disabled")
+                $("#msg").attr("disabled",true)
+                $("#msg").val('')
+                $("#pubBtn").attr("disabled",true)
+            }
+        }
+
+        function subChannel(channel){
+            $.ajax({
+                url:"/notify/sub/"+channel,
+                type:"GET",
+                success: function(data){
+                    
+                }
+            })
+        }
+
+        function unsubChannel(channel){
+            $.ajax({
+                url:"/notify/unsub/"+channel,
+                type:"GET",
+                success: function(data){
+                    $("#mesList *").remove();
+                }
+            })
+        }
+
+        function publishChannel(channel, message){
+            message = user_name + " : " + message
+            $.ajax({
+                url:"/notify/pub/"+channel+"/"+message,
+                type:"GET",
+                success: function(data){
+                    $("#msg").val('')
+                }
+            })
+        }
+
+        function receiveMsg(message){
+            $("#mesList").append("<li>" + getDate() + message+"</li>");
+        }
+
+        $('document').ready(function () {
+            $("#subBtn").on("click", function(){popSubChannel(0);})
+            $("#unsubBtn").on("click", function(){popSubChannel(1)})
+            $("#pubBtn").on("click", function(){publishChannel($("#channel").val(), $("#msg").val())})
+            init()
+        })
+
+block content
+  h1= 마이페이지
+  form 
+    h3#userId 아이디
+    h3#userPassword 비밀번호
+    h3#userName 이름
+
+  form
+    h3#channelName 채널명
+    ul#mesList 
+
+  form
+    input(type="text")#channel
+    button(type="button")#subBtn 구독
+    button(type="button")#unsubBtn 구독취소
+
+  form#pubForm
+    input(type="text")#msg
+    button(type="button")#pubBtn 퍼블리시
